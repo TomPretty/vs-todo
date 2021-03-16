@@ -10,14 +10,15 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:vs-todo.helloWorld"
+    "onCommand:vs-todo.open"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "vs-todo.helloWorld",
-        "title": "Hello World"
+        "command": "vs-todo.open",
+        "category": "Todo",
+        "title": "Open"
       }
     ]
   },
