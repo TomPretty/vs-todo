@@ -40,8 +40,8 @@ export function activate(context: vscode.ExtensionContext) {
 
       if (editor) {
         const todoList = TodoList.fromText(editor.document.getText());
-
         const currentLine = editor.selection.active.line;
+        todoList.completeTodo(currentLine);
 
         const startPosition = new vscode.Position(0, 0);
         const endPosition = new vscode.Position(editor.document.lineCount, 0);
