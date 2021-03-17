@@ -10,7 +10,9 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:vs-todo.open"
+    "onCommand:vs-todo.open",
+    "onCommand:vs-todo.createTodo",
+    "onCommand:vs-todo.completeTodo"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -19,6 +21,16 @@
         "command": "vs-todo.open",
         "category": "Todo",
         "title": "Open"
+      },
+      {
+        "command": "vs-todo.createTodo",
+        "category": "Todo",
+        "title": "Create Todo"
+      },
+      {
+        "command": "vs-todo.completeTodo",
+        "category": "Todo",
+        "title": "Complete Todo"
       }
     ]
   },
