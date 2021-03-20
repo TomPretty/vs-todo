@@ -13,7 +13,8 @@
     "onCommand:vs-todo.open",
     "onCommand:vs-todo.createTodo",
     "onCommand:vs-todo.completeTodo",
-    "onCommand:vs-todo.uncompleteTodo"
+    "onCommand:vs-todo.uncompleteTodo",
+    "onCommand:vs-todo.toggleTodo"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -37,6 +38,11 @@
         "command": "vs-todo.uncompleteTodo",
         "category": "Todo",
         "title": "Uncomplete Todo"
+      },
+      {
+        "command": "vs-todo.toggleTodo",
+        "category": "Todo",
+        "title": "Toggle Todo"
       }
     ]
   },
