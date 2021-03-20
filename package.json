@@ -12,7 +12,8 @@
   "activationEvents": [
     "onCommand:vs-todo.open",
     "onCommand:vs-todo.createTodo",
-    "onCommand:vs-todo.completeTodo"
+    "onCommand:vs-todo.completeTodo",
+    "onCommand:vs-todo.uncompleteTodo"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -31,6 +32,11 @@
         "command": "vs-todo.completeTodo",
         "category": "Todo",
         "title": "Complete Todo"
+      },
+      {
+        "command": "vs-todo.uncompleteTodo",
+        "category": "Todo",
+        "title": "Uncomplete Todo"
       }
     ]
   },
