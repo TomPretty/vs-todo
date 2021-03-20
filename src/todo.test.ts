@@ -1,4 +1,10 @@
-import { completeTodo, parse, toggleTodo, uncompleteTodo } from "./todo";
+import {
+  completeTodo,
+  format,
+  parse,
+  toggleTodo,
+  uncompleteTodo,
+} from "./todo";
 
 describe("parse", () => {
   it("parses a single unchecked todo", () => {
@@ -182,5 +188,32 @@ describe("toggleTodo", () => {
     toggleTodo([todo], todo.id);
 
     expect(todo.isComplete).toBeFalsy();
+  });
+});
+
+describe("format", () => {
+  it("prints a todo list", () => {
+    const text = `
+    - [x] a
+    - [ ] b
+    `;
+
+    const todos = parse(text);
+    const formatted = format(todos);
+
+    expect(formatted).toEqual("- [x] a\n- [ ] b");
+  });
+
+  it("prints a todo list with nested todos", () => {
+    const text = `
+    - [ ] a
+      - [ ] a1
+        - [ ] a1i
+    `;
+
+    const todos = parse(text);
+    const formatted = format(todos);
+
+    expect(formatted).toEqual("- [ ] a\n  - [ ] a1\n    - [ ] a1i");
   });
 });

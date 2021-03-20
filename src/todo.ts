@@ -6,6 +6,14 @@ export interface Todo {
   isComplete: boolean;
 }
 
+// export interface TodoList {
+//   todos: Todo[];
+// }
+
+// {
+//   root: { },
+// }
+
 const TODO_REGEX = /- \[( |x)\] (.*)/;
 
 export function parse(text: string): Todo[] {
@@ -107,4 +115,23 @@ export function toggleTodo(todos: Todo[], id: number) {
   } else {
     completeTodo(todos, id);
   }
+}
+
+export function format(todos: Todo[]) {
+  return todos
+    .filter((todo) => todo.parentId === null)
+    .map((todo) => formatTodo(todos, todo))
+    .join("\n");
+}
+
+const INDENTATION_PER_LEVEL = 2;
+
+function formatTodo(todos: Todo[], todo: Todo, level: number = 0): string {
+  const indentation = " ".repeat(INDENTATION_PER_LEVEL * level);
+  const marker = `- [${todo.isComplete ? "x" : " "}] `;
+
+  return [
+    `${indentation}${marker}${todo.body}`,
+    ...todo.childIds.map((cId) => formatTodo(todos, todos[cId], level + 1)),
+  ].join("\n");
 }

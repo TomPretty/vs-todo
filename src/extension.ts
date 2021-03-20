@@ -2,6 +2,7 @@ import { homedir } from "os";
 import { join } from "path";
 import * as vscode from "vscode";
 import { getFormattedDate } from "./date";
+import { completeTodo, format, parse } from "./todo";
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -38,15 +39,16 @@ export function activate(context: vscode.ExtensionContext) {
       const editor = vscode.window.activeTextEditor;
 
       if (editor) {
-        // const todoList = TodoList.fromText(editor.document.getText());
-        // const currentLine = editor.selection.active.line;
-        // todoList.completeTodo(currentLine);
-        // const startPosition = new vscode.Position(0, 0);
-        // const endPosition = new vscode.Position(editor.document.lineCount, 0);
-        // const range = new vscode.Range(startPosition, endPosition);
-        // editor.edit((editBuilder) => {
-        //   editBuilder.replace(range, todoList.toString() + "\n");
-        // });
+        const todos = parse(editor.document.getText());
+        const currentLine = editor.selection.active.line;
+        completeTodo(todos, currentLine);
+
+        const startPosition = new vscode.Position(0, 0);
+        const endPosition = new vscode.Position(editor.document.lineCount, 0);
+        const range = new vscode.Range(startPosition, endPosition);
+        editor.edit((editBuilder) => {
+          editBuilder.replace(range, format(todos) + "\n");
+        });
       }
     })
   );
