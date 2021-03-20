@@ -11,10 +11,10 @@
   ],
   "activationEvents": [
     "onCommand:vs-todo.open",
-    "onCommand:vs-todo.createTodo",
     "onCommand:vs-todo.completeTodo",
     "onCommand:vs-todo.uncompleteTodo",
-    "onCommand:vs-todo.toggleTodo"
+    "onCommand:vs-todo.toggleTodo",
+    "onCommand:vs-todo.createChildTodo"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -23,11 +23,6 @@
         "command": "vs-todo.open",
         "category": "Todo",
         "title": "Open"
-      },
-      {
-        "command": "vs-todo.createTodo",
-        "category": "Todo",
-        "title": "Create Todo"
       },
       {
         "command": "vs-todo.completeTodo",
@@ -43,6 +38,11 @@
         "command": "vs-todo.toggleTodo",
         "category": "Todo",
         "title": "Toggle Todo"
+      },
+      {
+        "command": "vs-todo.createChildTodo",
+        "category": "Todo",
+        "title": "Create Child Todo"
       }
     ]
   },

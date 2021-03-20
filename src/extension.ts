@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { getFormattedDate } from "./date";
 import {
   completeTodo,
+  createChildTodo,
   format,
   parse,
   Todo,
@@ -29,19 +30,6 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("vs-todo.createTodo", () => {
-      const editor = vscode.window.activeTextEditor;
-
-      if (editor) {
-        // parseTodoList(editor.document.getText());
-        // editor.edit((editBuilder) => {
-        //   editBuilder.insert(editor.selection.active, "\r\n- [ ] ");
-        // });
-      }
-    })
-  );
-
-  context.subscriptions.push(
     vscode.commands.registerCommand("vs-todo.completeTodo", () => {
       runTodoCommand(completeTodo);
     })
@@ -58,17 +46,30 @@ export function activate(context: vscode.ExtensionContext) {
       runTodoCommand(toggleTodo);
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("vs-todo.createChildTodo", () => {
+      runTodoCommand(createChildTodo, moveToEndOfNextLine);
+    })
+  );
 }
 
-function runTodoCommand(command: (todos: Todo[], currentLine: number) => void) {
+function runTodoCommand(
+  command: (todos: Todo[], currentLine: number) => void,
+  onDidFormat?: () => void
+) {
   const editor = vscode.window.activeTextEditor;
 
   if (editor) {
     const todos = parse(editor.document.getText());
     const currentLine = editor.selection.active.line;
-    command(todos, currentLine);
 
+    command(todos, currentLine);
     formatFile(todos, editor);
+
+    if (onDidFormat) {
+      onDidFormat();
+    }
   }
 }
 
@@ -76,8 +77,19 @@ function formatFile(todos: Todo[], editor: vscode.TextEditor) {
   const startPosition = new vscode.Position(0, 0);
   const endPosition = new vscode.Position(editor.document.lineCount, 0);
   const range = new vscode.Range(startPosition, endPosition);
+
   editor.edit((editBuilder) => {
     editBuilder.replace(range, format(todos) + "\n");
+  });
+}
+
+async function moveToEndOfNextLine() {
+  await vscode.commands.executeCommand("cursorMove", {
+    to: "down",
+    by: "line",
+  });
+  await vscode.commands.executeCommand("cursorMove", {
+    to: "wrappedLineEnd",
   });
 }
 

@@ -6,14 +6,6 @@ export interface Todo {
   isComplete: boolean;
 }
 
-// export interface TodoList {
-//   todos: Todo[];
-// }
-
-// {
-//   root: { },
-// }
-
 const TODO_REGEX = /- \[( |x)\] (.*)/;
 
 export function parse(text: string): Todo[] {
@@ -115,6 +107,20 @@ export function toggleTodo(todos: Todo[], id: number) {
   } else {
     completeTodo(todos, id);
   }
+}
+
+export function createChildTodo(todos: Todo[], id: number) {
+  const todo = todos[id];
+  const child: Todo = {
+    id: todos.length,
+    parentId: todo.id,
+    childIds: [],
+    isComplete: false,
+    body: "",
+  };
+  todo.childIds = [child.id, ...todo.childIds];
+  todos.push(child);
+  uncompleteTodo(todos, id, false, true);
 }
 
 export function format(todos: Todo[]) {

@@ -4,6 +4,7 @@ import {
   parse,
   toggleTodo,
   uncompleteTodo,
+  createChildTodo,
 } from "./todo";
 
 describe("parse", () => {
@@ -188,6 +189,33 @@ describe("toggleTodo", () => {
     toggleTodo([todo], todo.id);
 
     expect(todo.isComplete).toBeFalsy();
+  });
+});
+
+describe("createChildTodo", () => {
+  it("creates a child todo", () => {
+    const text = `
+    - [ ] a
+    `;
+
+    const todos = parse(text);
+    createChildTodo(todos, 0);
+
+    const [a, a1] = todos;
+
+    expect(a.childIds).toEqual([a1.id]);
+    expect(a1.parentId).toEqual(a.id);
+  });
+
+  it("uncompletes the parent todo", () => {
+    const text = `
+    - [x] a
+    `;
+
+    const [a] = parse(text);
+    createChildTodo([a], a.id);
+
+    expect(a.isComplete).toBeFalsy();
   });
 });
 
