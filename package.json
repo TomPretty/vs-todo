@@ -14,7 +14,8 @@
     "onCommand:vs-todo.completeTodo",
     "onCommand:vs-todo.uncompleteTodo",
     "onCommand:vs-todo.toggleTodo",
-    "onCommand:vs-todo.createChildTodo"
+    "onCommand:vs-todo.createChildTodo",
+    "onCommand:vs-todo.createSiblingTodo"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -43,6 +44,11 @@
         "command": "vs-todo.createChildTodo",
         "category": "Todo",
         "title": "Create Child Todo"
+      },
+      {
+        "command": "vs-todo.createSiblingTodo",
+        "category": "Todo",
+        "title": "Create Sibling Todo"
       }
     ]
   },

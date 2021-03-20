@@ -123,6 +123,35 @@ export function createChildTodo(todos: Todo[], id: number) {
   uncompleteTodo(todos, id, false, true);
 }
 
+export function createSiblingTodo(todos: Todo[], id: number) {
+  const todo = todos[id];
+  const sibling: Todo = {
+    id: todos.length,
+    parentId: todo.parentId,
+    childIds: [],
+    isComplete: false,
+    body: "",
+  };
+  if (todo.parentId !== null) {
+    const parent = todos[todo.parentId];
+    const indexOfTodo = parent.childIds.findIndex((cId) => cId === todo.id);
+    parent.childIds.splice(indexOfTodo + 1, 0, sibling.id);
+    uncompleteTodo(todos, parent.id, false, true);
+  }
+  todos.push(sibling);
+
+  const newTodoLineNumber = getLastDescendant(todos, id) + 1;
+  return newTodoLineNumber;
+}
+
+function getLastDescendant(todos: Todo[], id: number): number {
+  const todo = todos[id];
+  if (todo.childIds.length > 0) {
+    return getLastDescendant(todos, todo.childIds[todo.childIds.length - 1]);
+  }
+  return id;
+}
+
 export function format(todos: Todo[]) {
   return todos
     .filter((todo) => todo.parentId === null)

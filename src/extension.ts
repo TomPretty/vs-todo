@@ -5,6 +5,7 @@ import { getFormattedDate } from "./date";
 import {
   completeTodo,
   createChildTodo,
+  createSiblingTodo,
   format,
   parse,
   Todo,
@@ -49,7 +50,22 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("vs-todo.createChildTodo", () => {
-      runTodoCommand(createChildTodo, moveToEndOfNextLine);
+      runTodoCommand(createChildTodo, moveCursorToEndOfLine);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("vs-todo.createSiblingTodo", () => {
+      let numLinesToMoveCursorDown = 1;
+      const command = (todos: Todo[], currentLine: number) => {
+        numLinesToMoveCursorDown =
+          createSiblingTodo(todos, currentLine) - currentLine;
+      };
+      const onDidFormat = () => {
+        moveCursorToEndOfLine(numLinesToMoveCursorDown);
+      };
+
+      runTodoCommand(command, onDidFormat);
     })
   );
 }
@@ -83,10 +99,11 @@ function formatFile(todos: Todo[], editor: vscode.TextEditor) {
   });
 }
 
-async function moveToEndOfNextLine() {
+async function moveCursorToEndOfLine(numLinesDown: number = 0) {
   await vscode.commands.executeCommand("cursorMove", {
     to: "down",
     by: "line",
+    value: numLinesDown,
   });
   await vscode.commands.executeCommand("cursorMove", {
     to: "wrappedLineEnd",
