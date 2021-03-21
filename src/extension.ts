@@ -2,16 +2,7 @@ import { homedir } from "os";
 import { join } from "path";
 import * as vscode from "vscode";
 import { getFormattedDate } from "./date";
-import {
-  completeTodo,
-  createChildTodo,
-  createSiblingTodo,
-  format,
-  parse,
-  Todo,
-  toggleTodo,
-  uncompleteTodo,
-} from "./todo";
+import { TodoList } from "./todo";
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -32,56 +23,49 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("vs-todo.completeTodo", () => {
-      runTodoCommand(completeTodo);
+      runTodoCommand((todoList, currentLine) =>
+        todoList.completeTodo(currentLine)
+      );
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("vs-todo.uncompleteTodo", () => {
-      runTodoCommand(uncompleteTodo);
+      runTodoCommand((todoList, currentLine) =>
+        todoList.uncompleteTodo(currentLine)
+      );
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("vs-todo.toggleTodo", () => {
-      runTodoCommand(toggleTodo);
+      runTodoCommand((todoList, currentLine) =>
+        todoList.toggleTodo(currentLine)
+      );
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("vs-todo.createChildTodo", () => {
-      runTodoCommand(createChildTodo, moveCursorToEndOfLine);
-    })
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand("vs-todo.createSiblingTodo", () => {
-      let numLinesToMoveCursorDown = 1;
-      const command = (todos: Todo[], currentLine: number) => {
-        numLinesToMoveCursorDown =
-          createSiblingTodo(todos, currentLine) - currentLine;
-      };
-      const onDidFormat = () => {
-        moveCursorToEndOfLine(numLinesToMoveCursorDown);
-      };
-
-      runTodoCommand(command, onDidFormat);
+      runTodoCommand((todoList, currentLine) =>
+        todoList.addTodo("", false, currentLine)
+      );
     })
   );
 }
 
 function runTodoCommand(
-  command: (todos: Todo[], currentLine: number) => void,
+  command: (todoList: TodoList, currentLine: number) => void,
   onDidFormat?: () => void
 ) {
   const editor = vscode.window.activeTextEditor;
 
   if (editor) {
-    const todos = parse(editor.document.getText());
+    const todoList = TodoList.parse(editor.document.getText());
     const currentLine = editor.selection.active.line;
 
-    command(todos, currentLine);
-    formatFile(todos, editor);
+    command(todoList, currentLine);
+    formatFile(todoList, editor);
 
     if (onDidFormat) {
       onDidFormat();
@@ -89,13 +73,13 @@ function runTodoCommand(
   }
 }
 
-function formatFile(todos: Todo[], editor: vscode.TextEditor) {
+function formatFile(todoList: TodoList, editor: vscode.TextEditor) {
   const startPosition = new vscode.Position(0, 0);
   const endPosition = new vscode.Position(editor.document.lineCount, 0);
   const range = new vscode.Range(startPosition, endPosition);
 
   editor.edit((editBuilder) => {
-    editBuilder.replace(range, format(todos) + "\n");
+    editBuilder.replace(range, todoList.toString() + "\n");
   });
 }
 

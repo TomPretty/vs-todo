@@ -11,94 +11,67 @@ describe("TodoList.addTodo", () => {
   });
 });
 
-// describe.only("parse", () => {
-//   it.only("parses a single unchecked todo", () => {
-//     const text = `
-//     - [ ] a
-//     `;
+describe("TodoList.parse", () => {
+  it("parses a single unchecked todo", () => {
+    const text = `
+    - [ ] a
+    `;
 
-//     const { 0: todo } = parse(text);
+    const todoList = TodoList.parse(text);
 
-//     expect(todo.body).toBe("a");
-//     expect(todo.isComplete).toBeFalsy();
-//   });
+    expect(todoList.body(0)).toBe("a");
+    expect(todoList.isComplete(0)).toBeFalsy();
+  });
 
-//   it("parses a single unchecked todo", () => {
-//     const text = `
-//     - [x] a
-//     `;
+  it("parses a single checked todo", () => {
+    const text = `
+    - [x] a
+    `;
 
-//     const { 0: todo } = parse(text);
+    const todoList = TodoList.parse(text);
 
-//     expect(todo.body).toBe("a");
-//     expect(todo.isComplete).toBeTruthy();
-//   });
+    expect(todoList.body(0)).toBe("a");
+    expect(todoList.isComplete(0)).toBeTruthy();
+  });
 
-//   it("parses multiple top level todos", () => {
-//     const text = `
-//     - [ ] a
-//     - [ ] b
-//     `;
+  it("parses multiple top level todos", () => {
+    const text = `
+    - [ ] a
+    - [ ] b
+    `;
 
-//     const { 0: a, 1: b } = parse(text);
+    const todoList = TodoList.parse(text);
 
-//     expect(a.body).toEqual("a");
-//     expect(a.nextId).toEqual(b.id);
-//     expect(a.prevId).toBeNull();
+    expect(todoList.body(0)).toBe("a");
+    expect(todoList.body(1)).toBe("b");
+  });
 
-//     expect(b.body).toEqual("b");
-//     expect(b.nextId).toBeNull();
-//     expect(b.prevId).toEqual(a.id);
-//   });
+  it("parses a nested todo", () => {
+    const text = `
+    - [ ] a
+      - [ ] a1
+      - [ ] a2
+    `;
 
-//   it("parses a nested todo", () => {
-//     const text = `
-//     - [ ] a
-//       - [ ] a1
-//     `;
+    const todoList = TodoList.parse(text);
 
-//     const { 0: a, 1: a1 } = parse(text);
+    expect(todoList.parentId(1)).toBe(0);
+    expect(todoList.parentId(2)).toBe(0);
+  });
 
-//     expect(a1.parentId).toBe(a.id);
-//   });
+  it("parses a todo after a nested todo", () => {
+    const text = `
+    - [ ] a
+      - [ ] a1
+        - [ ] a1i
+      - [ ] a2
+    `;
 
-//   it("parses multiple nested todos", () => {
-//     const text = `
-//     - [ ] a
-//       - [ ] a1
-//       - [ ] a2
-//     `;
+    const todoList = TodoList.parse(text);
 
-//     const { 0: a, 1: a1, 2: a2 } = parse(text);
-
-//     expect(a2.parentId).toBe(a.id);
-//   });
-
-//   it("parses a todo after a nested todo", () => {
-//     const text = `
-//     - [ ] a
-//       - [ ] a1
-//         - [ ] a1i
-//       - [ ] a2
-//     `;
-
-//     const { 0: a, 3: a2 } = parse(text);
-
-//     expect(a2.parentId).toBe(a.id);
-//   });
-
-//   it("parses child relationships", () => {
-//     const text = `
-//     - [ ] a
-//       - [ ] a1
-//       - [ ] a2
-//     `;
-
-//     const { 0: a, 1: a1, 2: a2 } = parse(text);
-
-//     expect(a.childIds).toEqual([a1.id, a2.id]);
-//   });
-// });
+    expect(todoList.parentId(3)).toBe(0);
+  });
+});
 
 describe("TodoList.completeTodo", () => {
   it("completes a single todo", () => {
@@ -186,133 +159,42 @@ describe("TodoList.toggleTodo", () => {
   });
 });
 
-// describe("createChildTodo", () => {
-//   it("creates a child todo", () => {
-//     const text = `
-//     - [ ] a
-//     `;
+describe("TodoList.toString", () => {
+  it("stringifies a single completed todo", () => {
+    const todoList = new TodoList();
+    todoList.addTodo("a", true);
 
-//     const todos = parse(text);
-//     createChildTodo(todos, 0);
+    const stringified = todoList.toString();
 
-//     const { 0: a, 1: a1 } = todos;
+    expect(stringified).toEqual("- [x] a");
+  });
 
-//     expect(a.childIds).toEqual([a1.id]);
-//     expect(a.nextId).toBe(a1.id);
+  it("stringifies a single uncompleted todo", () => {
+    const todoList = new TodoList();
+    todoList.addTodo("a", false);
 
-//     expect(a1.parentId).toBe(a.id);
-//     expect(a1.prevId).toBe(a.id);
-//     expect(a1.nextId).toBeNull();
-//   });
+    const stringified = todoList.toString();
 
-//   it("uncompletes the parent todo", () => {
-//     const text = `
-//     - [x] a
-//     `;
+    expect(stringified).toEqual("- [ ] a");
+  });
 
-//     const [a] = parse(text);
-//     createChildTodo([a], a.id);
+  it("stringifies multiple top level todos", () => {
+    const todoList = new TodoList();
+    todoList.addTodo("a", true);
+    todoList.addTodo("b", true);
 
-//     expect(a.isComplete).toBeFalsy();
-//   });
-// });
+    const stringified = todoList.toString();
 
-// describe("createSiblingTodo", () => {
-//   it("creates a sibling todo", () => {
-//     const text = `
-//     - [ ] a
-//     `;
+    expect(stringified).toEqual("- [x] a\n- [x] b");
+  });
 
-//     const todos = parse(text);
-//     createSiblingTodo(todos, 0);
+  it("stringifies nested todos", () => {
+    const todoList = new TodoList();
+    const id = todoList.addTodo("a", true);
+    todoList.addTodo("a1", true, id);
 
-//     const [, b] = todos;
+    const stringified = todoList.toString();
 
-//     expect(b.parentId).toBeNull();
-//   });
-
-//   it("uncompletes the parent todo", () => {
-//     const text = `
-//     - [x] a
-//       - [x] a1
-//     `;
-
-//     const todos = parse(text);
-//     createSiblingTodo(todos, 1);
-
-//     const [a] = todos;
-
-//     expect(a.isComplete).toBeFalsy();
-//   });
-// });
-
-// describe("deleteTodo", () => {
-//   it("deletes a todo", () => {
-//     const text = `
-//     - [ ] a
-//     - [ ] b
-//     `;
-
-//     const todos = parse(text);
-//     deleteTodo(todos, 0);
-
-//     expect(todos.length).toEqual(1);
-//     expect(todos[0].body).toEqual("b");
-//   });
-
-//   it("deletes all nested todos", () => {
-//     const text = `
-//     - [ ] a
-//       - [ ] a1
-//         - [ ] a1i
-//       - [ ] a2
-//     - [ ] b
-//     `;
-
-//     const todos = parse(text);
-//     deleteTodo(todos, 0);
-
-//     expect(todos.length).toEqual(1);
-//     expect(todos[0].body).toEqual("b");
-//   });
-
-//   it("completes the parent todo if it was the last uncompleted child", () => {
-//     const text = `
-//     - [ ] a
-//       - [x] a1
-//       - [ ] a2
-//     `;
-
-//     const todos = parse(text);
-//     deleteTodo(todos, 2);
-
-//     expect(todos[0].isComplete).toBeTruthy();
-//   });
-// });
-
-// describe("format", () => {
-//   it("prints a todo list", () => {
-//     const text = `
-//     - [x] a
-//     - [ ] b
-//     `;
-
-//     const todos = parse(text);
-//     const formatted = format(todos);
-
-//     expect(formatted).toEqual("- [x] a\n- [ ] b");
-//   });
-
-//   it("prints a todo list with nested todos", () => {
-//     const text = `
-//     - [ ] a
-//       - [ ] a1
-//         - [ ] a1i
-//     `;
-
-//     const todos = parse(text);
-//     const formatted = format(todos);
-
-//     expect(formatted).toEqual("- [ ] a\n  - [ ] a1\n    - [ ] a1i");
-//   });
-// });
+    expect(stringified).toEqual("- [x] a\n  - [x] a1");
+  });
+});

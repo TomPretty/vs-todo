@@ -1,12 +1,7 @@
 interface Todo {
   id: number;
-  // tree relationship
   parentId: number | null;
   childIds: number[];
-  // double linked list
-  nextId: number | null;
-  prevId: number | null;
-  // data
   body: string;
   isComplete: boolean;
 }
@@ -15,23 +10,67 @@ interface Todos {
   [id: number]: Todo;
 }
 
+const TODO_REGEX = /- \[( |x)\] (.*)/;
+
 export class TodoList {
-  _todos: Todos = {};
-  _nextId = 0;
+  _todos: Todos;
+  _root: Todo;
+  _nextId: number;
+
+  constructor() {
+    this._todos = {};
+    this._root = {
+      id: -1,
+      parentId: null,
+      childIds: [],
+      body: "",
+      isComplete: false,
+    };
+    this._nextId = 0;
+  }
 
   static parse(text: string): TodoList {
     const todoList = new TodoList();
+
+    const parentIdStack: { id: number; indentation: number }[] = [];
+    const lines = text.split("\n");
+    lines.forEach((line) => {
+      const match = line.match(TODO_REGEX);
+      if (!match) {
+        return;
+      }
+
+      const [, check, body] = match;
+      const isComplete = check === "x";
+
+      const indentation = getIndentation(line);
+      let parentId: number | undefined = undefined;
+      while (parentIdStack.length > 0) {
+        const {
+          id: potentialParentId,
+          indentation: potentialParentIndentatoin,
+        } = parentIdStack[parentIdStack.length - 1];
+
+        if (indentation <= potentialParentIndentatoin) {
+          parentIdStack.pop();
+        } else {
+          parentId = potentialParentId;
+          break;
+        }
+      }
+      const id = todoList.addTodo(body, isComplete, parentId);
+
+      parentIdStack.push({ id, indentation });
+    });
 
     return todoList;
   }
 
   addTodo(body: string, isComplete: boolean, parentId?: number): number {
     const newTodo: Todo = {
-      id: this._nextId++,
+      id: this._nextId,
       parentId: null,
       childIds: [],
-      nextId: null,
-      prevId: null,
       body,
       isComplete,
     };
@@ -39,22 +78,14 @@ export class TodoList {
     if (parentId !== undefined) {
       const parentTodo = this._todos[parentId];
 
-      // wire up tree relationships
       newTodo.parentId = parentId;
       parentTodo.childIds.push(newTodo.id);
-
-      // wire up linked list relationships
-      if (parentTodo.nextId) {
-        const nextTodo = this._todos[parentTodo.nextId];
-
-        parentTodo.nextId = newTodo.id;
-        newTodo.prevId = parentTodo.id;
-        newTodo.nextId = nextTodo.id;
-        nextTodo.prevId = newTodo.id;
-      }
+    } else {
+      this._root.childIds.push(newTodo.id);
     }
 
     this._todos[newTodo.id] = newTodo;
+    this._nextId++;
 
     return newTodo.id;
   }
@@ -108,6 +139,23 @@ export class TodoList {
     }
   }
 
+  toString(): string {
+    return this._root.childIds.map((cId) => this.stringifyTodo(cId)).join("\n");
+  }
+
+  private stringifyTodo(id: number, level: number = 0): string {
+    const todo = this._todos[id];
+    const marker = `- [${todo.isComplete ? "x" : " "}] `;
+    const indentation = " ".repeat(level * 2);
+
+    const stringified = `${indentation}${marker}${todo.body}`;
+    const stringifiedChildren = todo.childIds.map((cId) =>
+      this.stringifyTodo(cId, level + 1)
+    );
+
+    return [stringified, ...stringifiedChildren].join("\n");
+  }
+
   body(id: number): string {
     return this._todos[id].body;
   }
@@ -115,117 +163,19 @@ export class TodoList {
   isComplete(id: number): boolean {
     return this._todos[id].isComplete;
   }
+
+  parentId(id: number): number | null {
+    return this._todos[id].parentId;
+  }
 }
 
-// const TODO_REGEX = /- \[( |x)\] (.*)/;
-
-// export function parse(text: string): Todos {
-//   const lines = text.split("\n");
-
-//   const todos: Todos = { nextId: 0 };
-//   let nextId = 0;
-//   const indentations: number[] = [];
-//   lines.forEach((line) => {
-//     const match = line.match(TODO_REGEX);
-//     if (!match) {
-//       return;
-//     }
-//     const [, check, body] = match;
-//     const isComplete = check === "x";
-
-//     const indentation = getIndentation(line);
-//     let parentId: number | null = null;
-//     if (nextId === 0) {
-//       parentId = null;
-//     } else if (indentation > indentations[nextId - 1]) {
-//       parentId = todos[nextId - 1].id;
-//     } else {
-//       for (let i = indentations.length - 1; i > -1; i--) {
-//         if (indentation === indentations[i]) {
-//           parentId = todos[i].parentId;
-//           break;
-//         }
-//       }
-//     }
-//     indentations.push(indentation);
-
-//     todos[nextId] = {
-//       id: nextId,
-//       parentId,
-//       childIds: [],
-//       nextId: null,
-//       prevId: nextId === 0 ? null : nextId - 1,
-//       body,
-//       isComplete,
-//     };
-//     nextId++;
-//   });
-
-//   todos.nextId = nextId;
-
-//   Object.values(todos).forEach((todo: Todo) => {
-//     if (todo.parentId !== null) {
-//       todos[todo.parentId].childIds.push(todo.id);
-//     }
-//     if (todo.prevId !== null) {
-//       todos[todo.prevId].nextId = todo.id;
-//     }
-//   });
-
-//   return todos;
-// }
-
-// function getIndentation(line: string): number {
-//   const match = line.match(/^(\s*)/);
-//   if (!match) {
-//     return 0;
-//   }
-//   return match[1].length;
-// }
-
-// export function createChildTodo(todos: Todos, id: number) {
-//   const todo = todos[id];
-//   const child: Todo = {
-//     id: todos.nextId,
-//     parentId: todo.id,
-//     nextId: todo.nextId,
-//     prevId: todo.id,
-//     childIds: [],
-//     isComplete: false,
-//     body: "",
-//   };
-
-//   if (todo.nextId) {
-//     todos[todo.nextId].prevId = child.id;
-//   }
-//   todo.nextId = child.id;
-//   todo.childIds = [child.id, ...todo.childIds];
-
-//   todos[child.id] = child;
-//   todos.nextId++;
-//   uncompleteTodo(todos, id, false, true);
-// }
-
-// export function createSiblingTodo(todos: Todo[], id: number) {
-//   const todo = todos[id];
-//   const sibling: Todo = {
-//     id: todos.length,
-//     parentId: todo.parentId,
-//     childIds: [],
-//     isComplete: false,
-//     body: "",
-//   };
-//   if (todo.parentId !== null) {
-//     const parent = todos[todo.parentId];
-//     const indexOfTodo = parent.childIds.findIndex((cId) => cId === todo.id);
-//     parent.childIds.splice(indexOfTodo + 1, 0, sibling.id);
-//     uncompleteTodo(todos, parent.id, false, true);
-//   }
-//   todos.push(sibling);
-
-//   const newTodoLineNumber = getLastDescendant(todos, id) + 1;
-//   return newTodoLineNumber;
-// }
+function getIndentation(line: string): number {
+  const match = line.match(/^(\s*)/);
+  if (!match) {
+    return 0;
+  }
+  return match[1].length;
+}
 
 // export function deleteTodo(todos: Todo[], id: number) {
 //   const index = todos.findIndex((t) => t.id === id);
@@ -237,31 +187,4 @@ export class TodoList {
 //   if (todo.parentId) {
 //     const parentIndex = todos.findIndex((t) => t.id === todo.parentId);
 //   }
-// }
-
-// function getLastDescendant(todos: Todo[], id: number): number {
-//   const todo = todos[id];
-//   if (todo.childIds.length > 0) {
-//     return getLastDescendant(todos, todo.childIds[todo.childIds.length - 1]);
-//   }
-//   return id;
-// }
-
-// export function format(todos: Todo[]) {
-//   return todos
-//     .filter((todo) => todo.parentId === null)
-//     .map((todo) => formatTodo(todos, todo))
-//     .join("\n");
-// }
-
-// const INDENTATION_PER_LEVEL = 2;
-
-// function formatTodo(todos: Todo[], todo: Todo, level: number = 0): string {
-//   const indentation = " ".repeat(INDENTATION_PER_LEVEL * level);
-//   const marker = `- [${todo.isComplete ? "x" : " "}] `;
-
-//   return [
-//     `${indentation}${marker}${todo.body}`,
-//     ...todo.childIds.map((cId) => formatTodo(todos, todos[cId], level + 1)),
-//   ].join("\n");
 // }
